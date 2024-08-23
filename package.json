@@ -1,0 +1,19 @@
+{
+  "name": "slow-news-in-thai",
+  "version": "1.0.0",
+  "description": "A web application that translates news articles from English to Thai",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py"
+  },
+  "dependencies": {
+    "flask": "^2.0.1",
+    "flask-cors": "^3.0.10",
+    "transformers": "^4.10.0",
+    "nltk": "^3.5",
+    "gTTS": "^2.2.2",
+    "feedparser": "^6.0.8",
+    "schedule": "^1.1.0",
+    "httpx": "^0.13.3"
+  }
+}

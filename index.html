@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทสรุปข่าวประจำวัน Bangkok Post</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .english-subtitle {
+            color: #666;
+            font-style: italic;
+            margin-left: 1em;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 id="main-title" class="text-3xl font-bold mb-4">บทสรุปข่าวประจำวัน Bangkok Post</h1>
+        
+        <!-- Audio player moved to the top -->
+        <div id="audio-player" class="mb-6">
+            <audio id="audio-element" controls class="w-full">
+                <source id="audio-source" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        
+        <div id="daily-summary" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <!-- Daily summary content will be inserted here -->
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const audioElement = document.getElementById('audio-element');
+            const audioSource = document.getElementById('audio-source');
+            const mainTitle = document.getElementById('main-title');
+            const summaryDiv = document.getElementById('daily-summary');
+
+            function updateContent() {
+                axios.get('/api/daily-summary')
+                    .then(function (response) {
+                        const dateMatch = response.data.summary.match(/บทสรุปข่าวประจำวันที่ (\d{4}-\d{2}-\d{2})/);
+                        if (dateMatch) {
+                            mainTitle.textContent = `บทสรุปข่าวประจำวัน Bangkok Post (${dateMatch[1]})`;
+                            const content = response.data.summary.replace(/บทสรุปข่าวประจำวันที่ \d{4}-\d{2}-\d{2}\n\n/, '');
+                            const formattedContent = formatContent(content);
+                            summaryDiv.innerHTML = formattedContent;
+                            
+                            // Use the exact audio filename returned by the server
+                            audioSource.src = `/audio/${response.data.audio_filename}`;
+                            console.log("Audio source set to:", audioSource.src);
+                            audioElement.load();
+                        } else {
+                            summaryDiv.textContent = response.data.summary;
+                        }
+                    })
+                    .catch(function (error) {
+                        console.error('Error fetching daily summary:', error);
+                    });
+            }
+
+            // Initial update
+            updateContent();
+
+            // Set up periodic updates (every 5 minutes)
+            setInterval(updateContent, 5 * 60 * 1000);
+
+            audioElement.addEventListener('loadeddata', function() {
+                console.log("Audio loaded successfully");
+            });
+
+            audioElement.addEventListener('error', function(e) {
+                console.error('Error loading audio file:', e);
+            });
+        });
+
+        function formatContent(content) {
+            const lines = content.split('\n');
+            let formattedContent = '';
+            lines.forEach(line => {
+                if (line.startsWith('•')) {
+                    formattedContent += `<h2 class="text-xl font-bold mt-4">${line}</h2>`;
+                } else if (line.startsWith('  (English:')) {
+                    formattedContent += `<p class="english-subtitle">${line.trim()}</p>`;
+                } else if (line.startsWith('  -')) {
+                    formattedContent += `<p class="ml-4 mt-2">${line}</p>`;
+                } else if (line.startsWith('    (English:')) {
+                    formattedContent += `<p class="english-subtitle ml-4">${line.trim()}</p>`;
+                } else {
+                    formattedContent += `<p>${line}</p>`;
+                }
+            });
+            return formattedContent;
+        }
+    </script>
+</body>
+</html>
